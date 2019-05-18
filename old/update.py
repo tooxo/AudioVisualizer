@@ -46,8 +46,8 @@ def search():
     for x in lin2:
         mount = x.split(" ")[0]
         folder = x.split("% ")[1]
-        files = os.listdir(folder)
         if "TOOXO_UPDATE" in files:
+        files = os.listdir(folder)
             pass
         else:
             print("no")
@@ -56,4 +56,8 @@ def search():
         for file in files:
             sub = ["cp", folder+"/"+file, "/home/pi/"+file]
             subprocess.call(sub)
+        sub2= ["cp", "/home/pi/audio.log", folder+"/"+"audio.log"]
+        subprocess.call(sub2)
+        sub3 = ["cp", "/home/pi/update.log", folder+"/"+"update.log"]
+        subprocess.call(sub3)
         os.system('sudo shutdown -r now')

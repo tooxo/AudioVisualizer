@@ -1,0 +1,10 @@
+{
+  "delay": 0.0,
+  "auxout": true,
+  "inputdevice": 0,
+  "input_type": "Spotify",
+  "outputdevice": 0,
+  "output_type": "AUX",
+  "lightson": true,
+  "chromecastname": ""
+}

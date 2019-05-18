@@ -1,0 +1,10 @@
+delay A_DELAY float/double MILLISECONDS
+auxout A_AUXOUT boolean
+inputdevice A_INDEVICE int
+outputdevice A_OUTDEVICE int
+
+lightson A_LIGHTS boolean
+
+reloadtemp A_RELOAD booolean
+
+chromecastname A_CHNAME String

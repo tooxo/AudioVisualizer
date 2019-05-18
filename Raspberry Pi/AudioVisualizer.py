@@ -12,6 +12,9 @@ import math
 import time
 import serial
 import audioop
+import numpy as np
+import threading
+import json as JSON
 
 class AudioVisualizer():
     def __init__(self):
@@ -19,11 +22,9 @@ class AudioVisualizer():
         self.FORMAT = pyaudio.paInt32
         self.SHORT_NORMALIZE = (1.0/32768.0)
         self.CHANNELS = 2
-        self.RATE = 48000
+        self.RATE = 44100
         self.INPUT_BLOCK_TIME = 0.05
         self.sendtext = b"\x01"
-        #self.INPUT_FRAMES_PER_BLOCK = int(self.RATE * self.INPUT_BLOCK_TIME)
-        # TESTING W/ THE INPUT FRAMES PER BLOCK
         self.INPUT_FRAMES_PER_BLOCK = 1024
 
         self.OVERSENSITIVE = 15.0 / self.INPUT_BLOCK_TIME
@@ -36,6 +37,9 @@ class AudioVisualizer():
         self.noisycount = self.MAX_TAP_BLOCKS+1
         self.quietcount = 0
         self.errorcount = 0
+
+        self.dict = dict()
+        self.updateDict()
 
         self.arduino = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
 
@@ -52,11 +56,33 @@ class AudioVisualizer():
             sum_squares += n*n
         return math.sqrt( sum_squares / count )
 
+    def arduinoPop(self):
+        self.arduino.write(self.sendtext)
+
+    def updateDict(self):
+        file = open("save.json", "r")
+        ret = JSON.loads(file.read())
+        file.close()
+        if self.dict != ret:
+            self.dict = ret
+            return True
+        else:
+            return False
+
     def callback(self,in_data,frame_count,time_info,status):
         amplitude = self.get_rms(in_data)
-        if status:
-            print(status)
-        #amplitude = self.get_rms_manual(in_data)
+        #if status:
+        #    print(status)
+        ## used to remove buzzing noise from non-grounded audio jacks ##
+        if bool(self.dict["auxout"]):
+            array = np.fromstring(in_data, dtype=np.int32)
+            if amplitude < 65:
+                empty = np.zeros(len(array), dtype=np.int32)
+                return(empty, pyaudio.paContinue)
+        else:
+            if amplitude < 65:
+                return(None, pyaudio.paContinue)
+        # amplitude = self.get_rms_manual(in_data) #
         if amplitude > self.tap_threshold:
             self.quietcount = 0
             self.noisycount += 1
@@ -66,30 +92,45 @@ class AudioVisualizer():
         else:
             if 1 <= self.noisycount <= self.MAX_TAP_BLOCKS:
                 print("tap!",time.time(),amplitude)
-                self.arduino.write(self.sendtext)
+                if bool(self.dict["lightson"]):
+                    if (float(self.dict["delay"]) > 0):
+                        secs = self.dict["delay"] / 1000
+                        timer = threading.Timer(secs, self.arduinoPop, args=None, kwargs=None)
+                        timer.start()
+                    else:
+                        self.arduinoPop()
             self.noisycount = 0
             self.quietcount += 1
-            if self.quietcount > self.UNDERSENSITIVE:
+            if self.quietcount > self.UNDERSENSITIVE and self.tap_threshold > 65:
                 self.tap_threshold *= 0.09
                 print("Up",self.tap_threshold)
-        return(in_data, pyaudio.paContinue)
+        if bool(self.dict["auxout"]):
+            return(in_data, pyaudio.paContinue)
+        else:
+            return(None, pyaudio.paContinue)
 
     def start(self):
         try:
-            stream = self.pa.open(format = self.FORMAT,
+            stream = self.pa.open(
+                format = self.FORMAT,
                 channels = self.CHANNELS,
                 rate = self.RATE,
                 input = True,
-                output = True,
+                output = bool(self.dict["delay"]),
+                input_device_index = int(self.dict["inputdevice"]),
+                output_device_index = 4,#int(self.dict["outputdevice"]),
                 frames_per_buffer = self.INPUT_FRAMES_PER_BLOCK,
                 stream_callback = self.callback)
             try:
                 while True:
                     time.sleep(1)
+                    if self.updateDict():
+                        print("Restarting, because of updated settings.")
+                        exit()
             except KeyboardInterrupt:
                 self.arduino.close()
                 stream.stop_stream()
                 stream.close()
                 self.pa.terminate()
         except Exception as e:
-            print(time.time(),e)
+            print(time.time(),e,self.dict["inputdevice"])
