@@ -7,7 +7,9 @@
 #################################################################
 
 import pyaudio
+import os
 import struct
+import sys
 import math
 import time
 import serial
@@ -15,6 +17,8 @@ import audioop
 import numpy as np
 import threading
 import json as JSON
+import subprocess
+import signal
 
 class AudioVisualizer():
     def __init__(self):
@@ -22,7 +26,7 @@ class AudioVisualizer():
         self.FORMAT = pyaudio.paInt32
         self.SHORT_NORMALIZE = (1.0/32768.0)
         self.CHANNELS = 2
-        self.RATE = 44100
+        self.RATE = 48000
         self.INPUT_BLOCK_TIME = 0.05
         self.sendtext = b"\x01"
         self.INPUT_FRAMES_PER_BLOCK = 1024
@@ -38,10 +42,21 @@ class AudioVisualizer():
         self.quietcount = 0
         self.errorcount = 0
 
+        self.pro = None
+
         self.dict = dict()
         self.updateDict()
 
         self.arduino = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+        print("###########################")
+        print("")
+        print("Initialized AudioVisualizer")
+        print("")
+        print("Using following Settings:")
+        print(self.dict)
+        print("")
+        print("###########################")
+
 
     def get_rms(self, block):
         return(audioop.rms(block,2))
@@ -59,6 +74,10 @@ class AudioVisualizer():
     def arduinoPop(self):
         self.arduino.write(self.sendtext)
 
+    def chromecastConnect(self):
+        proc = ["/usr/bin/mkchromecast", "--alsa-device", "cloop", "--encoder-backend", "ffmpeg", "-n", self.dict["chromecastname"]]
+        self.pro = subprocess.Popen(proc)
+
     def updateDict(self):
         file = open("save.json", "r")
         ret = JSON.loads(file.read())
@@ -74,14 +93,15 @@ class AudioVisualizer():
         #if status:
         #    print(status)
         ## used to remove buzzing noise from non-grounded audio jacks ##
-        if bool(self.dict["auxout"]):
-            array = np.fromstring(in_data, dtype=np.int32)
-            if amplitude < 65:
-                empty = np.zeros(len(array), dtype=np.int32)
-                return(empty, pyaudio.paContinue)
-        else:
-            if amplitude < 65:
-                return(None, pyaudio.paContinue)
+        if self.dict["cutthreshold"] != 0:
+            if bool(self.dict["auxout"]):
+                array = np.fromstring(in_data, dtype=np.int32)
+                if amplitude < self.dict["cutthreshold"]:
+                    empty = np.zeros(len(array), dtype=np.int32)
+                    return(empty, pyaudio.paContinue)
+            else:
+                if amplitude < self.dict["cutthreshold"]:
+                    return(None, pyaudio.paContinue)
         # amplitude = self.get_rms_manual(in_data) #
         if amplitude > self.tap_threshold:
             self.quietcount = 0
@@ -116,21 +136,32 @@ class AudioVisualizer():
                 channels = self.CHANNELS,
                 rate = self.RATE,
                 input = True,
-                output = bool(self.dict["delay"]),
+                output = bool(self.dict["auxout"]),
                 input_device_index = int(self.dict["inputdevice"]),
-                output_device_index = 4,#int(self.dict["outputdevice"]),
+                output_device_index = int(self.dict["outputdevice"]),
                 frames_per_buffer = self.INPUT_FRAMES_PER_BLOCK,
                 stream_callback = self.callback)
+
+            if self.dict["output_type"] == "Chromecast":
+                threading.Thread(target=self.chromecastConnect).start()
             try:
                 while True:
                     time.sleep(1)
                     if self.updateDict():
                         print("Restarting, because of updated settings.")
-                        exit()
-            except KeyboardInterrupt:
+                        break
+                print("CLOSING.")
                 self.arduino.close()
                 stream.stop_stream()
                 stream.close()
                 self.pa.terminate()
+            except Exception:
+                print("CLOSING.")
+                self.arduino.close()
+                stream.stop_stream()
+                stream.close()
+                self.pa.terminate()
+                if self.dict["output_type"] == "Chromecast":
+                    self.pro.send_signal(signal.SIGINT)
         except Exception as e:
             print(time.time(),e,self.dict["inputdevice"])

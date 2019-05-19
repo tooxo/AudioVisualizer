@@ -6,5 +6,6 @@
   "outputdevice": 0,
   "output_type": "Chromecast/AUX/None",
   "lightson": true,
-  "chromecastname": ""
+  "chromecastname": "",
+  "cutthreshold": 0
 }

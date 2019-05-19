@@ -2,10 +2,13 @@ import AudioVisualizer as aw
 import audioStream as a
 import threading
 from flask import Flask
+import time
 
 def AudioVis():
-    v = aw.AudioVisualizer()
-    v.start()
+    while True:
+        v = aw.AudioVisualizer()
+        v.start()
+        time.sleep(1)
 try:
     threading.Thread(target=AudioVis).start()
     a.Server()

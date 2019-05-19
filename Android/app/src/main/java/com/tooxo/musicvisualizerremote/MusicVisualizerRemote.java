@@ -7,7 +7,9 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -39,6 +41,7 @@ public class MusicVisualizerRemote extends AppCompatActivity {
     String chromecastname = "";
     String input_type = "AUX";
     String output_type = "AUX";
+    int cutthreshhold = 0;
 
     OkHttpClient client = new OkHttpClient();
 
@@ -84,6 +87,8 @@ public class MusicVisualizerRemote extends AppCompatActivity {
         setContentView(R.layout.main);
         Spinner inputMode = findViewById(R.id.inputMode);
         Spinner outputMode = findViewById(R.id.outputMode);
+        EditText thresholdEdit = findViewById(R.id.threshold);
+
 
         /*
             ON SWITCH
@@ -127,7 +132,7 @@ public class MusicVisualizerRemote extends AppCompatActivity {
         Button get = findViewById(R.id.getSettings);
         get.setOnClickListener(v -> new Thread(() -> {
 
-            String ret = getSettings(savedIp);
+            String ret = getSettings(ip);
             try {
                 JSONObject object = new JSONObject(ret);
                 runOnUiThread(() -> {
@@ -172,6 +177,7 @@ public class MusicVisualizerRemote extends AppCompatActivity {
                                 output_type = "AUX";
                                 output.setText(String.valueOf(q));
                                 output.setEnabled(true);
+                                output.setInputType(InputType.TYPE_CLASS_NUMBER);
                                 outputDevice = q;
                                 break;
                             case "Chromecast":
@@ -181,6 +187,7 @@ public class MusicVisualizerRemote extends AppCompatActivity {
                                 output_type = "Chromecast";
                                 output.setText(object.getString("chromecastname"));
                                 chromecastname = object.getString("chromecastname");
+                                output.setInputType(InputType.TYPE_CLASS_TEXT);
                                 outputDevice = -2;
                                 break;
                             case "None":
@@ -203,6 +210,17 @@ public class MusicVisualizerRemote extends AppCompatActivity {
                         delay = d;
                         du.setText(String.valueOf(d));
                         output.setEnabled(true);
+                    } catch (JSONException e) {
+                        new AlertDialog.Builder(context)
+                                .setTitle("Update")
+                                .setMessage("Update Failed " + e)
+                                .show();
+                    }
+
+                    try {
+                        int d = object.getInt("cutthreshold");
+                        cutthreshhold = d;
+                        thresholdEdit.setText(String.valueOf(d));
                     } catch (JSONException e) {
                         new AlertDialog.Builder(context)
                                 .setTitle("Update")
@@ -283,16 +301,21 @@ public class MusicVisualizerRemote extends AppCompatActivity {
                         s.setHint("AUX OUT Device");
                         s.setEnabled(true);
                         outputBool = true;
+                        output_type = "AUX";
+                        s.setInputType(InputType.TYPE_CLASS_NUMBER);
                         break;
                     case "Chromecast Out (heavy delay)":
                         s.setHint("Chromecast Device Name");
                         s.setEnabled(true);
+                        s.setInputType(InputType.TYPE_CLASS_TEXT);
                         outputBool = false;
+                        output_type = "Chromecast";
                         break;
                     case "No Sound output":
                         s.setHint("NO SOUND OUTPUT");
                         s.setEnabled(false);
                         outputBool = false;
+                        output_type = "None";
                         break;
                 }
             }
@@ -387,15 +410,46 @@ public class MusicVisualizerRemote extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                try {
-                    outputDevice = Integer.valueOf(s.toString());
-                } catch (Exception e) {
-                    outputDevice = -1;
+                Log.v("fick", output_type);
+                if (!output_type.equals("Chromecast")) {
+                    try {
+                        outputDevice = Integer.valueOf(s.toString());
+                    } catch (Exception e) {
+                        outputDevice = -1;
+                    }
+                }else {
+                    Log.v("foc", "you");
+                    outputDevice = -2;
                 }
             }
 
             @Override
             public void afterTextChanged(Editable s) {
+            }
+        });
+
+        /*
+            CUT THRESHOLD
+         */
+
+        thresholdEdit.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                try {
+                    cutthreshhold = Integer.valueOf(s.toString());
+                } catch (NumberFormatException e) {
+                    cutthreshhold = 0;
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
             }
         });
 
@@ -425,6 +479,7 @@ public class MusicVisualizerRemote extends AppCompatActivity {
                 }
                 object.put("input_type", input_type);
                 object.put("output_type", output_type);
+                object.put("cutthreshold", cutthreshhold);
                 if (inputDevice != -1) {
                     object.put("inputdevice", inputDevice);
                 } else {

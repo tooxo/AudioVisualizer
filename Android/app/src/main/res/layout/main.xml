@@ -7,10 +7,12 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
             <TextView
                 android:id="@+id/Control"
                 android:layout_width="match_parent"
@@ -50,16 +52,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal">
+
                 <Spinner
                     android:id="@+id/inputMode"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1" />
             </LinearLayout>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal">
+
                 <Spinner
                     android:id="@+id/outputMode"
                     android:layout_width="0dp"
@@ -141,6 +146,29 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Get Available Devices" />
+
+            <TextView
+                android:id="@+id/control5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Threshhold"
+                android:textAlignment="center"
+                android:textSize="40sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/threshold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ems="10"
+                    android:hint="Volume Cutoff Threshold"
+                    android:inputType="number" />
+            </LinearLayout>
 
             <Button
                 android:id="@+id/confirm"
