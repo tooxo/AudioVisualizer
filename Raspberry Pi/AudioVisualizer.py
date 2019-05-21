@@ -27,6 +27,7 @@ class AudioVisualizer():
         self.SHORT_NORMALIZE = (1.0/32768.0)
         self.CHANNELS = 2
         self.RATE = 48000
+
         self.INPUT_BLOCK_TIME = 0.05
         self.sendtext = b"\x01"
         self.INPUT_FRAMES_PER_BLOCK = 1024
@@ -149,6 +150,8 @@ class AudioVisualizer():
                     time.sleep(1)
                     if self.updateDict():
                         print("Restarting, because of updated settings.")
+                        break
+                    if not os.path.exists("on.lock"):
                         break
                 print("CLOSING.")
                 self.arduino.close()

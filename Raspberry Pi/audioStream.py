@@ -41,4 +41,30 @@ class Server():
                 return Response("Done.")
             except Exception as e:
                 return Response("Error." + str(e))
+        @app.route('/off')
+        def off():
+            if os.path.exists("on.lock"):
+                os.remove("on.lock")
+            return Response("True")
+        @app.route('/on')
+        def on():
+            f = open("on.lock","w+")
+            f.close()
+            return Response("True")
+        @app.route('/status')
+        def status():
+            return Response(str(os.path.exists("on.lock")))
+        @app.route('/masteron')
+        def masteron():
+            f = open("masteron.lock","w+")
+            f.close()
+            return Response("")
+        @app.route('/masteroff')
+        def masteroff():
+            if os.path.exists("masteron.lock"):
+                os.remove("on.lock")
+            return Response("")
+        @app.route('/masterstatus')
+        def masterstatus():
+            return Response(str(os.path.exists("masteron.lock")))
         app.run(host='0.0.0.0', port=8123, threaded=True, debug=True, use_reloader=False)

@@ -1,0 +1,6 @@
+flask
+pyaudio
+numpy
+audioop
+pysignal
+pyserial

@@ -1,52 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:layout_marginBottom="10dp"
+        android:orientation="horizontal"
+        android:weightSum="4">
+
+        <TextView
+            android:id="@+id/Control"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="3"
+            android:background="@color/colorPrimary"
+            android:fontFamily="@font/lato_bold"
+            android:gravity="center_vertical"
+            android:text="@string/control"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="40sp" />
+
+        <Button
+            android:id="@+id/masterButton"
+            android:layout_width="160dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@color/colorPrimary"
+            android:backgroundTintMode="screen"
+            android:fontFamily="@font/lato"
+            android:text="@string/dotdotodot"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/Control"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Control"
-                android:textAlignment="center"
-                android:textSize="40sp" />
+                android:layout_marginBottom="5dp"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/editIp"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:digits="0123456789.:"
+                    android:ems="10"
+                    android:fontFamily="@font/lato"
+                    android:hint="@string/ipaddress"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textColorHint="@color/colorPrimaryLight"
+                    app:backgroundTint="@color/colorPrimary" />
+
+                <Button
+                    android:id="@+id/getSettings"
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/buttonpurple"
+                    android:fontFamily="@font/lato"
+                    android:text="@string/get"
+                    android:textColor="@color/white" />
+            </LinearLayout>
 
             <Switch
                 android:id="@+id/switch1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Enable Lights" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
-
-                <EditText
-                    android:id="@+id/editIp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:digits="0123456789.:"
-                    android:ems="10"
-                    android:hint="IP Address" />
-
-                <Button
-                    android:id="@+id/getSettings"
-                    android:layout_width="150dp"
-                    android:layout_height="wrap_content"
-                    android:text="GET" />
-            </LinearLayout>
+                android:layout_marginBottom="10dp"
+                android:checked="true"
+                android:fontFamily="@font/lato"
+                android:text="@string/lightshow"
+                android:textColor="#808080"
+                android:textSize="25sp"
+                android:theme="@style/switchTheme" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -74,9 +115,11 @@
 
             <TextView
                 android:id="@+id/control"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Delay"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:fontFamily="@font/lato_bold"
+                android:text="@string/delay"
                 android:textAlignment="center"
                 android:textSize="40sp" />
 
@@ -87,19 +130,25 @@
 
                 <EditText
                     android:id="@+id/delay"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:ems="10"
-                    android:hint="Light delay in ms"
-                    android:inputType="numberDecimal" />
+                    android:fontFamily="@font/lato"
+                    android:hint="@string/lightdelay"
+                    android:inputType="numberDecimal"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textColorHint="@color/colorPrimaryLight"
+                    app:backgroundTint="@color/colorPrimary" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/control2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Device Selection"
+                android:layout_marginTop="10dp"
+                android:fontFamily="@font/lato_bold"
+                android:text="@string/deviceselection"
                 android:textAlignment="center"
                 android:textSize="40sp" />
 
@@ -107,7 +156,8 @@
                 android:id="@+id/control3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Only works if on aux in/aux out mode"
+                android:fontFamily="@font/lato"
+                android:text="@string/onlyaux"
                 android:textAlignment="center"
                 android:textSize="20sp" />
 
@@ -118,12 +168,16 @@
 
                 <EditText
                     android:id="@+id/auxInDevice"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:ems="10"
-                    android:hint="AUX IN Device"
-                    android:inputType="number" />
+                    android:fontFamily="@font/lato"
+                    android:hint="@string/auxin"
+                    android:inputType="number"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textColorHint="@color/colorPrimaryLight"
+                    app:backgroundTint="@color/colorPrimary" />
             </LinearLayout>
 
             <LinearLayout
@@ -133,25 +187,34 @@
 
                 <EditText
                     android:id="@+id/auxOutDevice"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:ems="10"
-                    android:hint="AUX OUT Device"
-                    android:inputType="number" />
+                    android:fontFamily="@font/lato"
+                    android:hint="@string/auxout"
+                    android:inputType="number"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textColorHint="@color/colorPrimaryLight"
+                    app:backgroundTint="@color/colorPrimary" />
             </LinearLayout>
 
             <Button
                 android:id="@+id/available"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Get Available Devices" />
+                android:background="@drawable/buttonpurple"
+                android:fontFamily="@font/lato"
+                android:text="@string/availableDevices"
+                android:textColor="@color/white" />
 
             <TextView
                 android:id="@+id/control5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Threshhold"
+                android:layout_marginTop="10dp"
+                android:fontFamily="@font/lato_bold"
+                android:text="@string/threshold"
                 android:textAlignment="center"
                 android:textSize="40sp" />
 
@@ -162,19 +225,26 @@
 
                 <EditText
                     android:id="@+id/threshold"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:ems="10"
-                    android:hint="Volume Cutoff Threshold"
-                    android:inputType="number" />
+                    android:fontFamily="@font/lato"
+                    android:hint="@string/volumecutoff"
+                    android:inputType="number"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textColorHint="@color/colorPrimaryLight"
+                    app:backgroundTint="@color/colorPrimary" />
             </LinearLayout>
 
             <Button
                 android:id="@+id/confirm"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Confirm" />
+                android:background="@drawable/buttonpurple"
+                android:fontFamily="@font/lato"
+                android:text="@string/confirm"
+                android:textColor="@color/white" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">MusicVisualizerRemote</string>
+    <string name="delay">Delay</string>
+    <string name="ipaddress">IP-Address</string>
+    <string name="control">Control</string>
+    <string name="lightshow">Enable LightShow</string>
+    <string name="get">GET</string>
+    <string name="lightdelay">Light Delay in MS</string>
+    <string name="deviceselection">Device Selection</string>
+    <string name="onlyaux">Only works in AUX IN/OUT Mode</string>
+    <string name="auxin">AUX IN Device</string>
+    <string name="auxout">AUX OUT Device</string>
+    <string name="availableDevices">Get Available Devices</string>
+    <string name="threshold">Threshold</string>
+    <string name="volumecutoff">Volume Cutoff Threshold</string>
+    <string name="confirm">Confirm</string>
+    <string name="dotdotodot">…</string>
+    <string name="on">ON</string>
+    <string name="off">OFF</string>
 </resources>

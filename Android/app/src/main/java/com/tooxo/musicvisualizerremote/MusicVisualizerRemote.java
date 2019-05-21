@@ -1,16 +1,17 @@
 package com.tooxo.musicvisualizerremote;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -30,8 +31,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class MusicVisualizerRemote extends AppCompatActivity {
-
+public class MusicVisualizerRemote extends Activity {
     String ip = "";
     Boolean outputBool = true;
     int outputDevice = -1;
@@ -42,8 +42,10 @@ public class MusicVisualizerRemote extends AppCompatActivity {
     String input_type = "AUX";
     String output_type = "AUX";
     int cutthreshhold = 0;
-
+    boolean masterStatus = false;
     OkHttpClient client = new OkHttpClient();
+    boolean running = true;
+    Context ctx = null;
 
     public String getSettings(String address) {
         String resp;
@@ -82,13 +84,135 @@ public class MusicVisualizerRemote extends AppCompatActivity {
         }
     }
 
+    Thread statusThread = new Thread(() -> {
+        long now = System.currentTimeMillis() - 5000;
+        while (running) {
+            WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+            if (wifi.getConnectionInfo().getNetworkId() != -1) {
+                if ((System.currentTimeMillis() - now) > 5000) {
+                    now = System.currentTimeMillis();
+                    Request request = new Request.Builder()
+                            .url("http://" + ip + "/status")
+                            .build();
+                    try (Response re = client.newCall(request).execute()) {
+                        assert re.body() != null;
+                        String res = re.body().string();
+                        switch (res) {
+                            case "True":
+                                masterStatus = true;
+                                runOnUiThread(() -> {
+                                    Button masterSwitch = findViewById(R.id.masterButton);
+                                    masterSwitch.setBackground(ctx.getDrawable(R.drawable.buttongreen));
+                                    masterSwitch.setText(ctx.getString(R.string.on));
+                                });
+                                break;
+                            case "False":
+                                masterStatus = false;
+                                runOnUiThread(() -> {
+                                    Button masterSwitch = findViewById(R.id.masterButton);
+                                    masterSwitch.setBackground(ctx.getDrawable(R.drawable.buttonred));
+                                    masterSwitch.setText(ctx.getString(R.string.off));
+                                });
+                                break;
+                        }
+                    } catch (IOException | NullPointerException io) {
+                        io.printStackTrace();
+                    }
+                }
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ie) {
+                assert true;
+            }
+        }
+    });
+
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.main);
         Spinner inputMode = findViewById(R.id.inputMode);
         Spinner outputMode = findViewById(R.id.outputMode);
         EditText thresholdEdit = findViewById(R.id.threshold);
+        ctx = this;
 
+
+        /*
+            MASTER SWITCH
+         */
+
+        Button master = findViewById(R.id.masterButton);
+        master.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (masterStatus) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Request request = new Request.Builder()
+                                    .url("http://" + ip + "/off")
+                                    .build();
+                            try (Response r = client.newCall(request).execute()) {
+                                if (!r.isSuccessful()) {
+                                    throw new IOException("Connection Interrupted.");
+                                }
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        master.setBackground(ctx.getDrawable(R.drawable.buttonred));
+                                        masterStatus = false;
+                                        master.setText("OFF");
+                                    }
+                                });
+                            } catch (IOException e) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        new AlertDialog.Builder(ctx)
+                                                .setTitle("Error")
+                                                .setMessage("There was an error connecting to the Server:\n" + e)
+                                                .show();
+                                    }
+                                });
+                            }
+                        }
+                    }).start();
+                } else {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Request request = new Request.Builder()
+                                    .url("http://" + ip + "/on")
+                                    .build();
+                            try (Response r = client.newCall(request).execute()) {
+                                if (!r.isSuccessful()) {
+                                    throw new IOException("Connection Interrupted.");
+                                }
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        master.setBackground(ctx.getDrawable(R.drawable.buttongreen));
+                                        masterStatus = true;
+                                        master.setText("ON");
+                                    }
+                                });
+                            } catch (IOException e) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        new AlertDialog.Builder(ctx)
+                                                .setTitle("Error")
+                                                .setMessage("There was an error connecting to the server:\n" + e)
+                                                .show();
+                                    }
+                                });
+                            }
+                        }
+                    }).start();
+                }
+            }
+        });
 
         /*
             ON SWITCH
@@ -410,15 +534,13 @@ public class MusicVisualizerRemote extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                Log.v("fick", output_type);
                 if (!output_type.equals("Chromecast")) {
                     try {
                         outputDevice = Integer.valueOf(s.toString());
                     } catch (Exception e) {
                         outputDevice = -1;
                     }
-                }else {
-                    Log.v("foc", "you");
+                } else {
                     outputDevice = -2;
                 }
             }
@@ -503,7 +625,17 @@ public class MusicVisualizerRemote extends AppCompatActivity {
                         .show();
             }
         });
+        statusThread.start();
 
+    }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 }
