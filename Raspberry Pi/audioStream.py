@@ -41,30 +41,22 @@ class Server():
                 return Response("Done.")
             except Exception as e:
                 return Response("Error." + str(e))
-        @app.route('/off')
-        def off():
-            if os.path.exists("on.lock"):
-                os.remove("on.lock")
-            return Response("True")
-        @app.route('/on')
-        def on():
-            f = open("on.lock","w+")
-            f.close()
-            return Response("True")
+
         @app.route('/status')
         def status():
-            return Response(str(os.path.exists("on.lock")))
-        @app.route('/masteron')
-        def masteron():
-            f = open("masteron.lock","w+")
+            f = open("open.lock", "r")
+            string = f.read()
             f.close()
-            return Response("")
-        @app.route('/masteroff')
-        def masteroff():
-            if os.path.exists("masteron.lock"):
-                os.remove("on.lock")
-            return Response("")
-        @app.route('/masterstatus')
-        def masterstatus():
-            return Response(str(os.path.exists("masteron.lock")))
+            return Response(string)
+        # 1 Everything off. 2 Lights only, no visu, 3 All
+        @app.route('/setstatus',methods=["POST"])
+        def setstatus():
+            f = open("open.lock", "w+")
+            string = request.data.decode()
+            if string == "1" or string == "2" or string == "3":
+                f.write(string)
+                f.close()
+                return Response("")
+            else:
+                return Response("Malformed Req.")
         app.run(host='0.0.0.0', port=8123, threaded=True, debug=True, use_reloader=False)

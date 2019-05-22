@@ -17,7 +17,7 @@ void setColor(int r, int g, int b) {
     analogWrite(GREEN_LED, g);
     analogWrite(BLUE_LED, b);
 }
-
+boolean v = true;
 int cc = 0;
 void cycle() {
     if (cc > 359) {
@@ -25,7 +25,9 @@ void cycle() {
     }
     int * color;
     H2R_HSBtoRGB(cc, 100, 50, color);
-    setColor(color[0], color[1], color[2]);
+    if (v == true){
+        setColor(color[0], color[1], color[2]);
+    }
     cc++;
 }
 
@@ -36,6 +38,8 @@ void setup() {
     pinMode(BLUE_LED, OUTPUT);
 }
 
+char on = 2;
+char off = 3;
 long last = millis();
 long clear = millis();
 void loop() {
@@ -43,6 +47,13 @@ void loop() {
         setColor(0, 0, 0);
         clear = millis();
         byte input = Serial.read();
+        if (input == on){
+            v = true;
+        }
+        if (input == off){
+            v = false;
+            setColor(0,0,0);
+        }
         int ran = random(30, 320);
         cc = cc + ran;
     }

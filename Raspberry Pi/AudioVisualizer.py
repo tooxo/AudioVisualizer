@@ -151,8 +151,11 @@ class AudioVisualizer():
                     if self.updateDict():
                         print("Restarting, because of updated settings.")
                         break
-                    if not os.path.exists("on.lock"):
+                    file = open("open.lock", "r")
+                    if file.read() is not "3":
+                        file.close()
                         break
+                    file.close()
                 print("CLOSING.")
                 self.arduino.close()
                 stream.stop_stream()
