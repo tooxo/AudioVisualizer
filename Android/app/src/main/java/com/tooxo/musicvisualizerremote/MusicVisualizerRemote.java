@@ -10,6 +10,7 @@ import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
@@ -33,6 +34,7 @@ import okhttp3.Response;
 
 public class MusicVisualizerRemote extends Activity {
     String ip = "";
+    protected static boolean isVisible = false;
     Boolean outputBool = true;
     int outputDevice = -1;
     int inputDevice = -1;
@@ -49,51 +51,61 @@ public class MusicVisualizerRemote extends Activity {
     Thread statusThread = new Thread(() -> {
         long now = System.currentTimeMillis() - 5000;
         while (running) {
-            WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-            if (wifi.getConnectionInfo().getNetworkId() != -1) {
-                if ((System.currentTimeMillis() - now) > 5000) {
-                    now = System.currentTimeMillis();
-                    Request request = new Request.Builder()
-                            .url("http://" + ip + "/status")
-                            .build();
-                    try (Response re = client.newCall(request).execute()) {
-                        assert re.body() != null;
-                        String res = re.body().string();
-                        switch (res) {
-                            case "1":
-                                masterStatus = 1;
-                                runOnUiThread(() -> {
-                                    Button masterSwitch = findViewById(R.id.masterButton);
-                                    masterSwitch.setBackground(ctx.getDrawable(R.drawable.buttonred));
-                                    masterSwitch.setText(ctx.getString(R.string.off));
-                                });
-                                break;
-                            case "2":
-                                masterStatus = 2;
-                                runOnUiThread(() -> {
-                                    Button masterSwitch = findViewById(R.id.masterButton);
-                                    masterSwitch.setBackground(ctx.getDrawable(R.drawable.buttonyellow));
-                                    masterSwitch.setText(ctx.getString(R.string.lo));
-                                });
-                                break;
-                            case "3":
-                                masterStatus = 3;
-                                runOnUiThread(() -> {
-                                    Button masterSwitch = findViewById(R.id.masterButton);
-                                    masterSwitch.setBackground(ctx.getDrawable(R.drawable.buttongreen));
-                                    masterSwitch.setText(ctx.getString(R.string.on));
-                                });
-                                break;
+            if (isVisible) {
+                WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+                if (wifi.getConnectionInfo().getNetworkId() != -1) {
+                    if ((System.currentTimeMillis() - now) > 5000) {
+                        now = System.currentTimeMillis();
+                        Request request = new Request.Builder()
+                                .url("http://" + ip + "/status")
+                                .build();
+                        try (Response re = client.newCall(request).execute()) {
+                            Log.v("response", re.toString());
+                            assert re.body() != null;
+                            String res = re.body().string();
+                            if (res.endsWith("\n")){
+                                res = res.split("\n")[0];
+                            }
+                            switch (res) {
+                                case "1":
+                                    masterStatus = 1;
+                                    runOnUiThread(() -> {
+                                        Button masterSwitch = findViewById(R.id.masterButton);
+                                        masterSwitch.setBackground(ctx.getDrawable(R.drawable.buttonred));
+                                        masterSwitch.setText(ctx.getString(R.string.off));
+                                    });
+                                    break;
+                                case "2":
+                                    masterStatus = 2;
+                                    runOnUiThread(() -> {
+                                        Button masterSwitch = findViewById(R.id.masterButton);
+                                        masterSwitch.setBackground(ctx.getDrawable(R.drawable.buttonyellow));
+                                        masterSwitch.setText(ctx.getString(R.string.lo));
+                                    });
+                                    break;
+                                case "3":
+                                    masterStatus = 3;
+                                    Log.v("typey", "3");
+                                    runOnUiThread(() -> {
+                                        Button masterSwitch = findViewById(R.id.masterButton);
+                                        masterSwitch.setBackground(ctx.getDrawable(R.drawable.buttongreen));
+                                        masterSwitch.setText(ctx.getString(R.string.on));
+                                    });
+                                    break;
+                                default:
+                                    Log.v("type", res);
+                                    break;
+                            }
+                        } catch (IOException | NullPointerException io) {
+                            io.printStackTrace();
                         }
-                    } catch (IOException | NullPointerException io) {
-                        io.printStackTrace();
                     }
                 }
-            }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ie) {
-                assert true;
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ie) {
+                    assert true;
+                }
             }
         }
     });
@@ -157,7 +169,7 @@ public class MusicVisualizerRemote extends Activity {
         Spinner outputMode = findViewById(R.id.outputMode);
         EditText thresholdEdit = findViewById(R.id.threshold);
         ctx = this;
-
+        isVisible = true;
 
         /*
             MASTER SWITCH
@@ -610,10 +622,12 @@ public class MusicVisualizerRemote extends Activity {
     @Override
     public void onPause() {
         super.onPause();
+        isVisible = false;
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        isVisible = true;
     }
 }
